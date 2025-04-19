@@ -19,8 +19,8 @@ endmodule
 module signed_add_with_overflow
 (
   input  [3:0] a, b,
-  output [3:0] sum,
-  output       overflow
+  output logic [3:0] sum,
+  output logic      overflow
 );
 
   // Task:
@@ -35,6 +35,13 @@ module signed_add_with_overflow
   // when the sum (either positive or negative)
   // of two input arguments does not fit into 4 bits.
   // Otherwise the 'overflow' should be set to 0.
+  logic [4:0] tmp;
+
+  always_comb begin
+    tmp = a + b;
+    overflow = (a[3] == b[3]) && (tmp[3] != a[3]);
+    sum = tmp[3:0];
+  end
 
 
 endmodule

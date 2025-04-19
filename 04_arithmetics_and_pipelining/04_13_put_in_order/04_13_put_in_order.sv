@@ -11,8 +11,8 @@ module put_in_order
     input  [ n_inputs - 1 : 0 ]
            [ width    - 1 : 0 ] up_data,
 
-    output                      down_vld,
-    output [ width   - 1 : 0 ]  down_data
+    output logic              down_vld,
+    output logic [ width - 1 : 0 ] down_data
 );
 
     // Task:
@@ -29,6 +29,33 @@ module put_in_order
     // Comment:
     // The idea of the block is kinda similar to the "parallel_to_serial" block
     // from Homework 2, but here block should also preserve the output order.
+    logic [clog2(n_inputs) - 1 : 0] current_index;
+    logic [n_inputs - 1 : 0] valid_indices;
 
+    always_ff @(posedge clk or posedge rst) begin
+        if (rst) begin
+            down_vld <= 1'b0;
+            down_data <= {width{1'b0}};
+            current_index <= 0;
+        end else begin
+            valid_indices = up_vlds;
+
+            if (valid_indices != 0) begin
+                for (int i = 0; i < n_inputs; i++) begin
+                    int idx = (current_index + i) % n_inputs;
+
+                    if (valid_indices[idx]) begin
+                        down_data <= up_data[idx]; 
+                        down_vld <= 1'b1; 
+
+                        current_index <= (idx + 1) % n_inputs; 
+                        break; 
+                    end
+                end
+            end else begin
+                down_vld <= 1'b0; 
+            end
+        end
+    end
 
 endmodule
