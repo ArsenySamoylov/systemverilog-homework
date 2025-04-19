@@ -29,6 +29,69 @@ module float_discriminant_distributor (
     //
     // Note 2:
     // Latency of the module "float_discriminant" should be clarified from the waveform.
+    localparam N = 11;
+    
+    logic [31:0] in_a   [N];
+    logic [31:0] in_b   [N];
+    logic [31:0] in_c   [N];
+    logic        in_vld [N];
 
+    logic        out_vld [N];
+    logic [31:0] out_res [N];
+    logic        out_res_neg  [N];
+    logic        out_err      [N];
+
+    logic out_busy [N];
+
+    logic [5:0] cnt;
+
+    always_ff @ (posedge clk) begin
+        if (rst) begin
+            cnt <= '0;
+        end
+
+        if(cnt ==  N - 1)
+            cnt <= 0;
+        else
+            cnt++;
+    end
+    
+    always_comb begin
+        for (int i = 0; i < N; i++)
+            in_vld[i] = '0;
+
+        in_a  [cnt] = a;
+        in_b  [cnt] = b;
+        in_c  [cnt] = c;
+        in_vld[cnt] = arg_vld;   
+
+        res_vld      = out_vld[cnt];
+        res          = out_res[cnt];
+        res_negative = out_res_neg[cnt];
+        err          = out_err[cnt];
+
+        busy = out_busy[cnt];
+    end
+
+
+    generate
+        genvar i;
+        for (i = 0; i < N; i++)
+            float_discriminant f1(
+                .clk(clk),
+                .rst(rst),
+
+                .arg_vld(in_vld[i]),
+                .a(in_a[i]),
+                .b(in_b[i]),
+                .c(in_c[i]),
+                
+                .res_vld(out_vld[i]),
+                .res    (out_res[i]),
+                .res_negative(out_res_neg[i]),
+                .err    (out_err[i]),
+                
+                .busy(out_busy[i]));
+    endgenerate
 
 endmodule
