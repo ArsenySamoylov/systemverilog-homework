@@ -29,7 +29,7 @@ module float_discriminant_distributor (
     //
     // Note 2:
     // Latency of the module "float_discriminant" should be clarified from the waveform.
-    localparam N = 11;
+    localparam N = 9;
     
     logic [31:0] in_a   [N];
     logic [31:0] in_b   [N];
