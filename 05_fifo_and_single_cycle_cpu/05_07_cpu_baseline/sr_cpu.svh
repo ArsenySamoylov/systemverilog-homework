@@ -32,6 +32,7 @@
 `define RVOP_SRL    7'b0110011
 `define RVOP_SLTU   7'b0110011
 `define RVOP_SUB    7'b0110011
+`define RVOP_MUL    7'b0110011
 
 // Instruction funct3
 
