@@ -42,69 +42,73 @@ module sqrt_formula_distributor
     // Hint:
     // Instantiate sufficient number of "formula_1_impl_1_top", "formula_1_impl_2_top",
     // or "formula_2_top" modules to achieve desired performance.
-    localparam N = (formula == 1) ? 13 : 51;
+
+    localparam N = (formula == 1) ? 13 : 49;
     
-    logic [31:0] in_a   [N];
-    logic [31:0] in_b   [N];
-    logic [31:0] in_c   [N];
-    logic        in_vld [N];
-
-    logic [31:0] out_res [N];
-    logic        out_vld [N];
-
-    logic [5:0] cnt;
-
-    always_ff @ (posedge clk) begin
+    logic [31:0] arg_in_a  [N];
+    logic [31:0] arg_in_b  [N];
+    logic [31:0] arg_in_c  [N];
+    logic        arg_valid [N];
+    
+    logic [31:0] res_out   [N];
+    logic        res_valid [N];
+    
+    logic [7:0] cnt;
+    
+    always_ff @(posedge clk) begin
         if (rst) begin
-            cnt <= '0;
-        end
-
-        if(cnt ==  N - 1)
             cnt <= 0;
-        else
-            cnt++;
+        end else begin
+            if (cnt == (N - 1))
+                cnt <= 0;
+            else
+                cnt <= cnt + 1;
+        end
     end
     
     always_comb begin
-        for (int i = 0; i < N; i++)
-            in_vld[i] = '0;
-
-        in_a  [cnt] = a;
-        in_b  [cnt] = b;
-        in_c  [cnt] = c;
-        in_vld[cnt] = arg_vld;   
-
-        res     = out_res[cnt];
-        res_vld = out_vld[cnt];
+        for (int j = 0; j < N; j++) begin
+            arg_valid[j] = 1'b0;
+        end
+        
+        arg_in_a[cnt]  = a;
+        arg_in_b[cnt]  = b;
+        arg_in_c[cnt]  = c;
+        arg_valid[cnt] = arg_vld;
+        
+        res     = res_out[cnt];
+        res_vld = res_valid[cnt];
     end
-
 
     generate
         genvar i;
-        if (formula == 1)
-            for (i = 0; i < N; i++)
-                formula_1_impl_1_top f1(
-                    .clk(clk),
-                    .rst(rst),
-                    .a(in_a[i]),
-                    .b(in_b[i]),
-                    .c(in_c[i]),
-                    .arg_vld(in_vld[i]),
-                    .res_vld(out_vld[i]),
-                    .res(out_res[i]));
-
-        else if (formula == 2)
-            for (i = 0; i < N; i++)
-                formula_2_top f2(
-                    .clk(clk),
-                    .rst(rst),
-                    .a(in_a[i]),
-                    .b(in_b[i]),
-                    .c(in_c[i]),
-                    .arg_vld(in_vld[i]),
-                    .res_vld(out_vld[i]),
-                    .res(out_res[i]));
-
+        if (formula == 1) begin : gen_formula1
+            for (i = 0; i < N; i = i + 1) begin
+                formula_1_impl_1_top u_formula1 (
+                    .clk    (clk),
+                    .rst    (rst),
+                    .a      (arg_in_a[i]),
+                    .b      (arg_in_b[i]),
+                    .c      (arg_in_c[i]),
+                    .arg_vld(arg_valid[i]),
+                    .res_vld(res_valid[i]),
+                    .res    (res_out[i])
+                );
+            end
+        end else if (formula == 2) begin : gen_formula2
+            for (i = 0; i < N; i = i + 1) begin
+                formula_2_top u_formula2 (
+                    .clk    (clk),
+                    .rst    (rst),
+                    .a      (arg_in_a[i]),
+                    .b      (arg_in_b[i]),
+                    .c      (arg_in_c[i]),
+                    .arg_vld(arg_valid[i]),
+                    .res_vld(res_valid[i]),
+                    .res    (res_out[i])
+                );
+            end
+        end
     endgenerate
 
 endmodule
