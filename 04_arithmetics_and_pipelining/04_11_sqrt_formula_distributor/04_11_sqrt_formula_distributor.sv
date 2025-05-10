@@ -12,8 +12,8 @@ module sqrt_formula_distributor
     input  [31:0] b,
     input  [31:0] c,
 
-    output        res_vld,
-    output [31:0] res
+    output logic        res_vld,
+    output logic [31:0] res
 );
 
     // Task:
@@ -43,5 +43,72 @@ module sqrt_formula_distributor
     // Instantiate sufficient number of "formula_1_impl_1_top", "formula_1_impl_2_top",
     // or "formula_2_top" modules to achieve desired performance.
 
+    localparam N = (formula == 1) ? 13 : 49;
+    
+    logic [31:0] arg_in_a  [N];
+    logic [31:0] arg_in_b  [N];
+    logic [31:0] arg_in_c  [N];
+    logic        arg_valid [N];
+    
+    logic [31:0] res_out   [N];
+    logic        res_valid [N];
+    
+    logic [7:0] cnt;
+    
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            cnt <= 0;
+        end else begin
+            if (cnt == (N - 1))
+                cnt <= 0;
+            else
+                cnt <= cnt + 1;
+        end
+    end
+    
+    always_comb begin
+        for (int j = 0; j < N; j++) begin
+            arg_valid[j] = 1'b0;
+        end
+        
+        arg_in_a[cnt]  = a;
+        arg_in_b[cnt]  = b;
+        arg_in_c[cnt]  = c;
+        arg_valid[cnt] = arg_vld;
+        
+        res     = res_out[cnt];
+        res_vld = res_valid[cnt];
+    end
+
+    generate
+        genvar i;
+        if (formula == 1) begin : gen_formula1
+            for (i = 0; i < N; i = i + 1) begin
+                formula_1_impl_1_top u_formula1 (
+                    .clk    (clk),
+                    .rst    (rst),
+                    .a      (arg_in_a[i]),
+                    .b      (arg_in_b[i]),
+                    .c      (arg_in_c[i]),
+                    .arg_vld(arg_valid[i]),
+                    .res_vld(res_valid[i]),
+                    .res    (res_out[i])
+                );
+            end
+        end else if (formula == 2) begin : gen_formula2
+            for (i = 0; i < N; i = i + 1) begin
+                formula_2_top u_formula2 (
+                    .clk    (clk),
+                    .rst    (rst),
+                    .a      (arg_in_a[i]),
+                    .b      (arg_in_b[i]),
+                    .c      (arg_in_c[i]),
+                    .arg_vld(arg_valid[i]),
+                    .res_vld(res_valid[i]),
+                    .res    (res_out[i])
+                );
+            end
+        end
+    endgenerate
 
 endmodule

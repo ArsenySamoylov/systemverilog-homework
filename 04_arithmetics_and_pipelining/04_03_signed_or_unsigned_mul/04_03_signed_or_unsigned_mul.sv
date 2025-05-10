@@ -43,6 +43,23 @@ endmodule
 // that produces either signed or unsigned result
 // of the multiplication depending on the 'signed_mul' input bit.
 
+// A parameterized module
+// that implements the unsigned multiplication of N-bit numbers
+// which produces 2N-bit result
+
+module signed_mul
+# (
+  parameter n = 8
+)
+(
+  input  signed [    n - 1:0] a, b,
+  output signed [2 * n - 1:0] res
+);
+
+  assign res = a * b;
+
+endmodule
+
 module signed_or_unsigned_mul
 # (
   parameter n = 8
@@ -53,4 +70,11 @@ module signed_or_unsigned_mul
   output [2 * n - 1:0] res
 );
 
+  logic signed [2 * n - 1:0] signed_result;
+  logic        [2 * n - 1:0] unsigned_result;
+
+  signed_mul   #(n) sm (.a(a), .b(b), .res(signed_result));
+  unsigned_mul #(n) um (.a(a), .b(b), .res(unsigned_result));
+
+  assign res = signed_mul ? signed_result : unsigned_result;
 endmodule
